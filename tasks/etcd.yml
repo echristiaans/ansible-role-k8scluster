@@ -1,0 +1,54 @@
+---
+- name: check if the etcd binaries are already there
+  stat:
+    path: /usr/local/bin/etcd
+  register: stat_etcd
+
+- name: download the etcd binaries
+  unarchive:
+    src: https://github.com/coreos/etcd/releases/download/v3.2.11/etcd-v3.2.11-linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+  when: not stat_etcd.stat.exists
+
+- name: copy the etcd files to the correct directory
+  copy:
+    src: "/tmp/etcd-v3.2.11-linux-amd64/{{ item }}"
+    dest: /usr/local/bin
+    mode: 0755
+    remote_src: true
+  with_items:
+    - etcdctl
+    - etcd
+  when: not stat_etcd.stat.exists
+
+- name: create the required etcd directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/etcd
+    - /var/lib/etcd
+
+- name: copy the required certificates
+  copy:
+    src: "/etc/ssl/private/{{ item }}"
+    dest: /etc/etcd
+    remote_src: true
+  with_items:
+    - ca.pem
+    - kubernetes-key.pem
+    - kubernetes.pem
+
+- name: copy the etcd service file
+  template:
+    src: etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+    mode: 0644
+
+- name: start and enable etcd service
+  systemd:
+    state: started
+    enabled: yes
+    daemon_reload: yes
+    name: etcd

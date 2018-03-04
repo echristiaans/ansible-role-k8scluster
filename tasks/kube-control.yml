@@ -1,0 +1,88 @@
+---
+- name: check if the Kubernetes binaries are already there
+  stat:
+    path: /usr/local/bin/kube-apiserver
+  register: stat_kube
+
+- name: download the Kubernetes Controller binaries
+  get_url:
+    url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubeversion }}/bin/linux/amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    validate_certs: no
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+  when: not stat_kube.stat.exists
+
+- name: create the required Kubernetes directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /var/lib/kubernetes
+
+- name: copy the required certificates
+  copy:
+    src: "/etc/ssl/private/{{ item }}"
+    dest: /var/lib/kubernetes
+    remote_src: true
+  with_items:
+    - ca.pem
+    - ca-key.pem
+    - kubernetes-key.pem
+    - kubernetes.pem
+
+- name: check if the encryption config is already there
+  stat:
+    path: /var/lib/kubernetes/encryption-config.yml
+  register: stat_encryptionconfig
+
+- name: copy the encryption config
+  copy:
+    src: /tmp/encryption-config.yml
+    dest: /var/lib/kubernetes/encryption-config.yml
+    remote_src: true
+  when: not stat_encryptionconfig.stat.exists
+
+- name: copy the Kubernetes Controller service file2
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    mode: 0644
+  with_items:
+    - kube-apiserver.service
+    - kube-controller-manager.service
+    - kube-scheduler.service
+
+- name: start and enable Kubernetes Controller services
+  systemd:
+    state: started
+    enabled: yes
+    daemon_reload: yes
+    name: "{{ item }}"
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+
+- name: copy the RBAC files to 1 of the masters
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - kube-api-to-kubelet-clusterrole.yml
+    - kube-api-to-kubelet-clusterrole-binding.yml
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: Create the system:kube-apiserver-to-kubelet ClusterRole
+  shell: kubectl apply -f /tmp/kube-api-to-kubelet-clusterrole.yml
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: Bind the system:kube-apiserver-to-kubelet ClusterRole to the kubernetes user
+  shell: kubectl apply -f /tmp/kube-api-to-kubelet-clusterrole-binding.yml
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true

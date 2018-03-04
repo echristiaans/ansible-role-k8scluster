@@ -1,0 +1,156 @@
+---
+- name: install necessary tools | cfssl
+  get_url:
+    url: https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+    dest: /usr/local/bin/cfssl
+    mode: 0755
+    validate_certs: no
+
+- name: install necessary tools | cfssljson
+  get_url:
+    url: https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+    dest: /usr/local/bin/cfssljson
+    mode: 0755
+    validate_certs: no
+
+- name: install necessary tools | kubectl
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.9.0/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: 0755
+    validate_certs: no
+  #delegate_to: "{{ groups['kube-masters'][0] }}"
+
+- name: set local tmp directory
+  set_fact: tmp="{{ lookup('env','TMPDIR') }}"
+
+- name: copy the CA configuration file ca-config.json
+  copy:
+    src: ca-config.json
+    dest: /tmp/ca-config.json
+
+- name: copy the CA certificate signing request ca-csr.json
+  copy:
+    src: ca-csr.json
+    dest: /tmp/ca-csr.json
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: generate the CA certificate and private key
+  shell: cfssl gencert -initca /tmp/ca-csr.json | cfssljson -bare ca
+  args:
+    chdir: /etc/ssl/private
+    creates: /etc/ssl/private/ca-key.pem
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: fetch the CA certificate key for distribution to other nodes
+  fetch:
+    src: /etc/ssl/private/ca-key.pem
+    dest: "{{ tmp }}/ca-key.pem"
+    flat: yes
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: fetch the CA certificate for distribution to other nodes
+  fetch:
+    src: /etc/ssl/private/ca.pem
+    dest: "{{ tmp }}/ca.pem"
+    flat: yes
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: copy the CA certificate key to the other nodes
+  copy:
+    src: "{{ tmp }}/ca-key.pem"
+    dest: /etc/ssl/private/ca-key.pem
+  #when: inventory_hostname in groups['kube-masters']
+
+- name: copy the CA certificate key to the other nodes
+  copy:
+    src: "{{ tmp }}/ca.pem"
+    dest: /etc/ssl/private/ca.pem
+
+- name: copy the admin client certificate signing request admin-csr.json
+  copy:
+    src: admin-csr.json
+    dest: /tmp/admin-csr.json
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: generate the admin client certificate and private key
+  shell: cfssl gencert -ca=/etc/ssl/private/ca.pem -ca-key=/etc/ssl/private/ca-key.pem -config=/tmp/ca-config.json -profile=kubernetes /tmp/admin-csr.json | cfssljson -bare admin
+  args:
+    chdir: /etc/ssl/private
+    creates: /etc/ssl/private/admin-key.pem
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: copy the kubelet client certificate signing template to the workers instance-csr.json
+  template:
+    src: instance-csr.json.j2
+    dest: "/tmp/{{ ansible_nodename }}-csr.json"
+  when: inventory_hostname in groups['kube-workers']
+
+- name: generate the kubelet client certificate signing request
+  shell: cfssl gencert -ca=/etc/ssl/private/ca.pem -ca-key=/etc/ssl/private/ca-key.pem -config=/tmp/ca-config.json -hostname={{ ansible_nodename }},{{ external_ip }},{{ ansible_default_ipv4.address }} -profile=kubernetes /tmp/{{ ansible_nodename }}-csr.json | cfssljson -bare {{ ansible_nodename }}
+  args:
+    chdir: /etc/ssl/private
+    creates: /etc/ssl/private/{{ ansible_nodename }}-key.pem
+  when: inventory_hostname in groups['kube-workers']
+
+- name: copy the kube-proxy client certificate signing request kube-proxy-csr.json
+  copy:
+    src: kube-proxy-csr.json
+    dest: /tmp/kube-proxy-csr.json
+  when: inventory_hostname in groups['kube-workers']
+
+- name: generate the kube-proxy client certificate and private key
+  shell: cfssl gencert -ca=/etc/ssl/private/ca.pem -ca-key=/etc/ssl/private/ca-key.pem -config=/tmp/ca-config.json -profile=kubernetes /tmp/kube-proxy-csr.json | cfssljson -bare kube-proxy
+  args:
+    chdir: /etc/ssl/private
+    creates: /etc/ssl/private/kube-proxy-key.pem
+  when: inventory_hostname in groups['kube-workers']
+
+- name: copy the Kubernetes API Server certificate signing request kubernetes-csr.json
+  copy:
+    src: kubernetes-csr.json
+    dest: /tmp/kubernetes-csr.json
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: generate the Kubernetes API Server certificate and private key
+  shell: cfssl gencert -ca=/etc/ssl/private/ca.pem -ca-key=/etc/ssl/private/ca-key.pem -config=/tmp/ca-config.json -hostname=10.32.0.1,{{ groups['kube-masters'][0] }},{{ groups['kube-masters'][1] }},{{ groups['kube-masters'][2] }},{{ external_ip }},127.0.0.1,kubernetes.default -profile=kubernetes /tmp/kubernetes-csr.json | cfssljson -bare kubernetes
+  args:
+    chdir: /etc/ssl/private
+    creates: /etc/ssl/private/kubernetes-key.pem
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: fetch the Kubernetes API Server certificate key for distribution to other master nodes
+  fetch:
+    src: /etc/ssl/private/kubernetes-key.pem
+    dest: "{{ tmp }}/kubernetes-key.pem"
+    flat: yes
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: fetch the Kubernetes API Server certificate for distribution to other master nodes
+  fetch:
+    src: /etc/ssl/private/kubernetes.pem
+    dest: "{{ tmp }}/kubernetes.pem"
+    flat: yes
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
+- name: copy the Kubernetes API Server certificate key to the other master nodes
+  copy:
+    src: "{{ tmp }}/kubernetes-key.pem"
+    dest: /etc/ssl/private/kubernetes-key.pem
+  when: inventory_hostname in groups['kube-masters']
+
+- name: copy the Kubernetes API Server certificate to the other master nodes
+  copy:
+    src: "{{ tmp }}/kubernetes.pem"
+    dest: /etc/ssl/private/kubernetes.pem
+  when: inventory_hostname in groups['kube-masters']

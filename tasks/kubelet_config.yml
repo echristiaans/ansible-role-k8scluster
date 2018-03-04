@@ -1,0 +1,40 @@
+---
+- name: Generate the kubelet kubeconfig file for each worker node | set-cluster
+  shell: kubectl config set-cluster {{ k8sclustername }} --certificate-authority=/etc/ssl/private/ca.pem --embed-certs=true --server=https://{{ external_ip }}/:6443 --kubeconfig={{ ansible_nodename }}.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Generate the kubelet kubeconfig file for each worker node | set-credentials
+  shell: kubectl config set-credentials system:node:{{ ansible_nodename }} --client-certificate=/etc/ssl/private/{{ ansible_nodename }}.pem --client-key=/etc/ssl/private/{{ ansible_nodename }}-key.pem --embed-certs=true --kubeconfig={{ ansible_nodename }}.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Generate the kubelet kubeconfig file for each worker node | set-context
+  shell: kubectl config set-context default --cluster={{ k8sclustername }} --user=system:node:{{ ansible_nodename }} --kubeconfig={{ ansible_nodename }}.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Configure the kubelet
+  shell: kubectl config use-context default --kubeconfig={{ ansible_nodename }}.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Generate the kube-proxy kubeconfig file for each worker node | set-cluster
+  shell: kubectl config set-cluster {{ k8sclustername }} --certificate-authority=/etc/ssl/private/ca.pem --embed-certs=true --server=https://{{ external_ip }}/:6443 --kubeconfig=kube-proxy.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Generate the kube-proxy kubeconfig file for each worker node | set-credentials
+  shell: kubectl config set-credentials kube-proxy --client-certificate=/etc/ssl/private/kube-proxy.pem --client-key=/etc/ssl/private/kube-proxy-key.pem --embed-certs=true --kubeconfig=kube-proxy.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Generate the kube-proxy kubeconfig file for each worker node | set-context
+  shell: kubectl config set-context default --cluster={{ k8sclustername }} --user=kube-proxy --kubeconfig=kube-proxy.kubeconfig
+  args:
+    chdir: /tmp
+
+- name: Configure the kube-proxy
+  shell: kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+  args:
+    chdir: /tmp
