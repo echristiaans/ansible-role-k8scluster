@@ -20,7 +20,7 @@
     chdir: /tmp
 
 - name: Generate the kube-proxy kubeconfig file for each worker node | set-cluster
-  shell: kubectl config set-cluster {{ k8sclustername }} --certificate-authority=/etc/ssl/private/ca.pem --embed-certs=true --server=https://{{ external_ip }}/:6443 --kubeconfig=kube-proxy.kubeconfig
+  shell: kubectl config set-cluster {{ k8sclustername }} --certificate-authority=/etc/ssl/private/ca.pem --embed-certs=true --server=https://{{ external_ip }}:6443 --kubeconfig=kube-proxy.kubeconfig
   args:
     chdir: /tmp
 
