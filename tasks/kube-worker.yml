@@ -89,7 +89,7 @@
 - name: copy the kube-proxy config
   copy:
     src: /tmp/kube-proxy.kubeconfig
-    dest: /var/lib/kubelet/kubeconfig
+    dest: /var/lib/kube-proxy/kubeconfig
     remote_src: true
 
 - name: copy the CA certificate
