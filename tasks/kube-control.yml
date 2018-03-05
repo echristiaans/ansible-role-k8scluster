@@ -46,7 +46,7 @@
     remote_src: true
   when: not stat_encryptionconfig.stat.exists
 
-- name: copy the Kubernetes Controller service file2
+- name: copy the Kubernetes Controller service file
   template:
     src: "{{ item }}.j2"
     dest: "/etc/systemd/system/{{ item }}"
