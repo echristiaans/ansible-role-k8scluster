@@ -77,8 +77,8 @@
     dest: /var/lib/kubelet
     remote_src: true
   with_items:
-    - {{ ansible_nodename }}-key.pem
-    - {{ ansible_nodename }}.pem
+    - "{{ ansible_nodename }}-key.pem"
+    - "{{ ansible_nodename }}.pem"
 
 - name: copy the kubelet config
   copy:
