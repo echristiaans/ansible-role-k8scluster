@@ -24,6 +24,8 @@
 - name: set local tmp directory
   set_fact: tmp="{{ lookup('env','TMPDIR') }}"
 
+- debug: msg="{{tmp}}"
+
 - name: copy the CA configuration file ca-config.json
   copy:
     src: ca-config.json
