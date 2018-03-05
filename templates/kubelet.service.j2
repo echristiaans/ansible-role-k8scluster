@@ -23,6 +23,7 @@ ExecStart=/usr/local/bin/kubelet \
   --runtime-request-timeout=15m \
   --tls-cert-file=/var/lib/kubelet/{{ ansible_nodename }}.pem \
   --tls-private-key-file=/var/lib/kubelet/{{ ansible_nodename }}-key.pem \
+  --fail-swap-on=false \
   --v={{ kube_controller_version }}
 Restart=on-failure
 RestartSec=5

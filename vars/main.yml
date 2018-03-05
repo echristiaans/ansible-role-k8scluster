@@ -1,6 +1,6 @@
 ---
 # vars file for ansible-role-k8scluster
-external_ip: 217.100.96.52 # the external IP address over which the services will be accessible
+external_ip: 10.14.0.10 # the external IP address over which the services will be accessible
 k8sclustername: kubernetes-ansible
 kubeversion: 1.9.0
 service_cluster_ip_range: 10.32.0.0/24

@@ -3,33 +3,33 @@
 # https is configured to run on port 6443
 # choose your pod CIDR range, e.g. 10.200.0.0/16 - this is the range the pods will use to communicate
 
-#- name: Generate and copy certificates
-  #include: certificates.yml
-  #when: ansible_system == "Linux"
+- name: Generate and copy certificates
+  include: certificates.yml
+  when: ansible_system == "Linux"
 
-#- name: configure the kubelet and kube-proxy
-#  include: kubelet_config.yml
-#  when:
-#    - inventory_hostname in groups['kube-workers']
-#    - ansible_system == "Linux"
+- name: configure the kubelet and kube-proxy
+  include: kubelet_config.yml
+  when:
+    - inventory_hostname in groups['kube-workers']
+    - ansible_system == "Linux"
 
-#- name: copy the data encryption config
-#  include: data_encryption_config.yml
-#  when:
-#    - inventory_hostname in groups['kube-masters']
-#    - ansible_system == "Linux"
+- name: copy the data encryption config
+  include: data_encryption_config.yml
+  when:
+    - inventory_hostname in groups['kube-masters']
+    - ansible_system == "Linux"
 
-#- name: install etcd
-#  include: etcd.yml
-#  when:
-#    - inventory_hostname in groups['kube-masters']
-#    - ansible_system == "Linux"
+- name: install etcd
+  include: etcd.yml
+  when:
+    - inventory_hostname in groups['kube-masters']
+    - ansible_system == "Linux"
 
-#- name: install and configure the Kubernetes Controllers
-#  include: kube-control.yml
-#  when:
-#    - inventory_hostname in groups['kube-masters']
-#    - ansible_system == "Linux"
+- name: install and configure the Kubernetes Controllers
+  include: kube-control.yml
+  when:
+    - inventory_hostname in groups['kube-masters']
+    - ansible_system == "Linux"
 
 - name: install and configure the Kubernetes Workers
   include: kube-worker.yml
