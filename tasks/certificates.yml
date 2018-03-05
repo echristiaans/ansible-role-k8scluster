@@ -47,7 +47,7 @@
 - name: change permissions on ca key so we can fetch it
   file:
     path: /etc/ssl/private/ca-key.pem
-    mode: 0640
+    mode: 0644
   delegate_to: "{{ groups['kube-masters'][0] }}"
   run_once: true
 
