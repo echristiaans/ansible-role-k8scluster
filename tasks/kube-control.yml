@@ -67,6 +67,13 @@
     - kube-controller-manager
     - kube-scheduler
 
+- name: Wait for port 8080 to become open on the host # don't start checking for 5 seconds
+  wait_for:
+    port: 8080
+    delay: 5
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+
 - name: copy the RBAC files to 1 of the masters
   copy:
     src: "{{ item }}"
