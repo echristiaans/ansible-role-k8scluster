@@ -25,8 +25,14 @@
 #    - inventory_hostname in groups['kube-masters']
 #    - ansible_system == "Linux"
 
-- name: install and configure the Kubernetes Controllers
-  include: kube-control.yml
+#- name: install and configure the Kubernetes Controllers
+#  include: kube-control.yml
+#  when:
+#    - inventory_hostname in groups['kube-masters']
+#    - ansible_system == "Linux"
+
+- name: install and configure the Kubernetes Workers
+  include: kube-worker.yml
   when:
-    - inventory_hostname in groups['kube-masters']
+    - inventory_hostname in groups['kube-workers']
     - ansible_system == "Linux"
