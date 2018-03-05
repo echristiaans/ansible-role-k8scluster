@@ -1,6 +1,6 @@
 ---
 - name: Generate the kubelet kubeconfig file for each worker node | set-cluster
-  shell: kubectl config set-cluster {{ k8sclustername }} --certificate-authority=/etc/ssl/private/ca.pem --embed-certs=true --server=https://{{ external_ip }}/:6443 --kubeconfig={{ ansible_nodename }}.kubeconfig
+  shell: kubectl config set-cluster {{ k8sclustername }} --certificate-authority=/etc/ssl/private/ca.pem --embed-certs=true --server=https://{{ external_ip }}:6443 --kubeconfig={{ ansible_nodename }}.kubeconfig
   args:
     chdir: /tmp
 
