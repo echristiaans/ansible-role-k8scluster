@@ -4,35 +4,35 @@
 # choose your pod CIDR range, e.g. 10.200.0.0/16 - this is the range the pods will use to communicate
 
 - name: Generate and copy certificates
-  include: certificates.yml
+  include_tasks: certificates.yml
   when: ansible_system == "Linux"
 
 - name: configure the kubelet and kube-proxy
-  include: kubelet_config.yml
+  include_tasks: kubelet_config.yml
   when:
     - inventory_hostname in groups['kube-workers']
     - ansible_system == "Linux"
 
 - name: copy the data encryption config
-  include: data_encryption_config.yml
+  include_tasks: data_encryption_config.yml
   when:
     - inventory_hostname in groups['kube-masters']
     - ansible_system == "Linux"
 
 - name: install etcd
-  include: etcd.yml
+  include_tasks: etcd.yml
   when:
     - inventory_hostname in groups['kube-masters']
     - ansible_system == "Linux"
 
 - name: install and configure the Kubernetes Controllers
-  include: kube-control.yml
+  include_tasks: kube-control.yml
   when:
     - inventory_hostname in groups['kube-masters']
     - ansible_system == "Linux"
 
 - name: install and configure the Kubernetes Workers
-  include: kube-worker.yml
+  include_tasks: kube-worker.yml
   when:
     - inventory_hostname in groups['kube-workers']
     - ansible_system == "Linux"
