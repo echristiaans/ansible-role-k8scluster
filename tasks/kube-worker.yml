@@ -14,6 +14,16 @@
     path: /usr/local/bin/containerd
   register: stat_containerd
 
+- name: check if the Kubelet kubeconfig is already there
+  stat:
+    path: /var/lib/kubelet/kubeconfig
+  register: stat_kubeletkubeconfig
+
+- name: check if the kube-proxy kubeconfig is already there
+  stat:
+    path: /var/lib/kube-proxy/kubeconfig
+  register: stat_kubeproxykubeconfig
+
 - name: install the dependencies
   apt:
     name: "{{ item }}"
@@ -21,6 +31,7 @@
     state: present
   with_items:
     - socat
+    - conntrack
 
 - name: create the required Kubernetes directories
   file:
@@ -85,12 +96,14 @@
     src: "/tmp/{{ ansible_nodename }}.kubeconfig"
     dest: /var/lib/kubelet/kubeconfig
     remote_src: true
+  when: not stat_kubeletkubeconfig.stat.exists
 
 - name: copy the kube-proxy config
   copy:
     src: /tmp/kube-proxy.kubeconfig
     dest: /var/lib/kube-proxy/kubeconfig
     remote_src: true
+  when: not stat_kubeproxykubeconfig.stat.exists
 
 - name: copy the CA certificate
   copy:
@@ -118,3 +131,12 @@
     - kubelet
     - containerd
     - cri-containerd
+
+- name: add the routes to the POD networks
+  blockinfile:
+    path: /etc/network/interfaces
+    block: |
+      up route add -net {{ pod_cidr_base }}3.0/24 gw {{ hostvars[groups['kube-workers'][3]].ansible_default_ipv4.address }}
+      up route add -net {{ pod_cidr_base }}4.0/24 gw {{ hostvars[groups['kube-workers'][4]].ansible_default_ipv4.address }}
+      up route add -net {{ pod_cidr_base }}5.0/24 gw {{ hostvars[groups['kube-workers'][5]].ansible_default_ipv4.address }}
+    notify: restart_network

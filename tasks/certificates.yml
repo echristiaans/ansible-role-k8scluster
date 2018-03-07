@@ -29,8 +29,6 @@
   set_fact: tmp="/tmp"
   when: ansible_system == "Linux"
 
-- debug: msg="{{ tmp }}"
-
 - name: copy the CA configuration file ca-config.json
   copy:
     src: ca-config.json

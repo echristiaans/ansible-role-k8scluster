@@ -1,2 +1,6 @@
 ---
 # handlers file for ansible-role-k8scluster
+- name: restart_network
+  systemd:
+    state: restarted
+    name: networking

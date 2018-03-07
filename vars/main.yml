@@ -10,3 +10,4 @@ kube_controller_version: 2
 cni_version: "0.3.1"
 cluster_domain: cluster.local
 vpx_snip: 10.14.2.9
+pod_cidr_base: 10.200.
