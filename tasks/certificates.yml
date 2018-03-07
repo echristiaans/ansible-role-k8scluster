@@ -21,14 +21,6 @@
     validate_certs: no
   #delegate_to: "{{ groups['kube-masters'][0] }}"
 
-- name: set local tmp directory on MacOS
-  set_fact: tmp="{{ lookup('env','TMPDIR') }}"
-  when: ansible_system == "Darwin"
-
-- name: set local tmp directory on linux
-  set_fact: tmp="/tmp"
-  when: ansible_system == "Linux"
-
 - name: copy the CA configuration file ca-config.json
   copy:
     src: ca-config.json

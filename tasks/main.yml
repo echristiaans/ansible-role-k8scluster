@@ -2,6 +2,13 @@
 # firewall rules are required to make everything work
 # https is configured to run on port 6443
 # choose your pod CIDR range, e.g. 10.200.0.0/16 - this is the range the pods will use to communicate
+- name: set local tmp directory on MacOS
+  set_fact: tmp="{{ lookup('env','TMPDIR') }}"
+  when: ansible_system == "Darwin"
+
+- name: set local tmp directory on linux
+  set_fact: tmp="/tmp"
+  when: ansible_system == "Linux"
 
 - name: Generate and copy certificates
   include_tasks: certificates.yml
@@ -35,4 +42,10 @@
   include_tasks: kube-worker.yml
   when:
     - inventory_hostname in groups['kube-workers']
+    - ansible_system == "Linux"
+
+- name: Create the Kubernetes DNS Service
+  include_tasks: kube-dns.yml
+  when:
+    - inventory_hostname in groups['kube-masters']
     - ansible_system == "Linux"
