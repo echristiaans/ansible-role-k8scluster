@@ -32,7 +32,6 @@
   with_items:
     - socat
     - conntrack
-    - nsenter
 
 - name: create the required Kubernetes directories
   file:
