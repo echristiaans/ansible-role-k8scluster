@@ -1,4 +1,4 @@
-Role Name
+# Ansible Role: Kubernetes Cluster
 =========
 
 This role deploys a multi-master Kubernetes cluster based on 6 nodes, 3 master nodes and 3 worker nodes. It follows the guidelines as described by Kelsey Hightower in his "Kubernetes the hard way" series found here: https://github.com/kelseyhightower/kubernetes-the-hard-way
@@ -34,11 +34,11 @@ The Ansible inventory file that I worked with while testing this playbook looks 
 <short name of worker node 3>
 
 
-Requirements
+## Requirements
 ------------
 This role assumes local servers, and is written for non-cloud environments.
 
-Role Variables
+## Role Variables
 --------------
 
 external_ip: 1.1.1.1 # the external IP address over which the services will be accessible
@@ -53,12 +53,12 @@ cluster_domain: cluster.local # the domain name you want to use for the cluster
 pod_cidr_base: 10.200. # the first 2 octets of your {{ cluster_cidr }}
 kube_dns_ip: 10.32.0.10 # the IP address you want to use for the Kube-dns service. This IP must be taken from the subnet you defined in {{ service_cluster_ip_range }}
 
-Dependencies
+## Dependencies
 ------------
 
 None
 
-Example Playbook
+## Example Playbook
 ----------------
 
     - hosts: kubernetes
@@ -68,13 +68,12 @@ Example Playbook
         k8sclustername: k8s-test-cluster
         cluster_domain: testenv.local
 
-License
+## License
 -------
 
 BSD
 
-Author Information
+## Author Information
 ------------------
 
-Erik Christiaans
-erik@ascode.nl
+This role was created by Erik Christiaans, erik@ascode.nl
