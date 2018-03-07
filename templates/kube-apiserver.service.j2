@@ -11,7 +11,12 @@ ExecStart=/usr/local/bin/kube-apiserver \
   --audit-log-maxage=30 \
   --audit-log-maxbackup=3 \
   --audit-log-maxsize=100 \
+  {%if {{ ansible_os_family }} == 'Redhat' %}
   --audit-log-path=/var/log/audit.log \
+  {% endif %}
+  {%if {{ ansible_os_family }} == 'Debian' %}
+  --audit-log-path=/var/log/auth.log \
+  {% endif %}
   --authorization-mode=Node,RBAC \
   --bind-address=0.0.0.0 \
   --client-ca-file=/var/lib/kubernetes/ca.pem \
