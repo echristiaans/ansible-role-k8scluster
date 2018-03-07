@@ -1,6 +1,6 @@
 galaxy_info:
   author: Erik Christiaans
-  description: my description
+  description: Kubernetes Cluster for installation on local nodes
   company: ascode.nl
 
   # If the issue tracker for your role is not on github, uncomment the
@@ -33,9 +33,9 @@ galaxy_info:
   # platforms is a list of platforms, and each platform has a name and a list of versions.
   #
   platforms:
-  - name: Ubuntu
-     versions:
-     - 1604
+    - name: Ubuntu
+      versions:
+      - 1604
   #   - 25
   # - name: SomePlatform
   #   versions:
