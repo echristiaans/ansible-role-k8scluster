@@ -8,9 +8,9 @@
 - name: copy the Kubernetes DNS service file
   template:
     src: kube-dns.yml.j2
-    dest: /tmp/kube-dns.yml"
+    dest: /tmp/kube-dns.yml
   when: '"kube-dns" not in kubedns_result.stdout'
-  
+
 - name: Create the Kubernetes DNS service
   shell: kubectl create -f /tmp/kube-dns.yml
   delegate_to: "{{ groups['kube-masters'][0] }}"
