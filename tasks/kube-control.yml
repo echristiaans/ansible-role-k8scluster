@@ -70,7 +70,6 @@
 - name: Wait for port 8080 to open on the host # don't start checking for 15 seconds
   wait_for:
     port: 8080
-    host: "{{ groups['kube-masters'][0] }}"
     delay: 15
   delegate_to: "{{ groups['kube-masters'][0] }}"
   run_once: true
