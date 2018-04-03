@@ -138,7 +138,9 @@
     block: |
       up route add -net {{ pod_cidr_base }}4.0/24 gw {{ hostvars[groups['kube-workers'][4]].ansible_default_ipv4.address }}
       up route add -net {{ pod_cidr_base }}5.0/24 gw {{ hostvars[groups['kube-workers'][5]].ansible_default_ipv4.address }}
-  when: inventory_hostname in groups['kube-workers'][3]
+  when:
+    - inventory_hostname in groups['kube-workers'][3]
+    - not is_aws
   notify: restart_network
 
 - name: add the routes to the POD networks
@@ -147,7 +149,9 @@
     block: |
       up route add -net {{ pod_cidr_base }}3.0/24 gw {{ hostvars[groups['kube-workers'][3]].ansible_default_ipv4.address }}
       up route add -net {{ pod_cidr_base }}5.0/24 gw {{ hostvars[groups['kube-workers'][5]].ansible_default_ipv4.address }}
-  when: inventory_hostname in groups['kube-workers'][4]
+  when:
+    - inventory_hostname in groups['kube-workers'][4]
+    - not is_aws
   notify: restart_network
 
 - name: add the routes to the POD networks
@@ -156,5 +160,7 @@
     block: |
       up route add -net {{ pod_cidr_base }}4.0/24 gw {{ hostvars[groups['kube-workers'][4]].ansible_default_ipv4.address }}
       up route add -net {{ pod_cidr_base }}3.0/24 gw {{ hostvars[groups['kube-workers'][3]].ansible_default_ipv4.address }}
-  when: inventory_hostname in groups['kube-workers'][5]
+  when:
+    - inventory_hostname in groups['kube-workers'][5]
+    - not is_aws
   notify: restart_network

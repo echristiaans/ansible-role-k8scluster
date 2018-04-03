@@ -12,3 +12,4 @@ cluster_domain: cluster.local
 vpx_snip: 10.14.2.9
 pod_cidr_base: 10.200.
 kube_dns_ip: 10.32.0.10
+is_aws: false
