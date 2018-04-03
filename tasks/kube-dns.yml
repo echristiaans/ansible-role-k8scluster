@@ -1,0 +1,18 @@
+---
+- name: check if the Kubernetes DNS service is already deployed
+  shell: kubectl get pods -n=kube-system
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+  register: kubedns_result
+
+- name: copy the Kubernetes DNS service file
+  template:
+    src: kube-dns.yml.j2
+    dest: /tmp/kube-dns.yml"
+  when: '"kube-dns" not in kubedns_result.stdout'
+  
+- name: Create the Kubernetes DNS service
+  shell: kubectl create -f /tmp/kube-dns.yml
+  delegate_to: "{{ groups['kube-masters'][0] }}"
+  run_once: true
+  when: '"kube-dns" not in kubedns_result.stdout'
